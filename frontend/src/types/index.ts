@@ -12,6 +12,12 @@ export interface Employee {
   building_name: string;
   ward_number: string;
   ward_name?: string;
+  // Add computed properties from backend
+  employee_details?: string;
+  contact_details?: string;
+  office_details?: string;
+  booth_details?: string;
+  assignment_summary?: string;
 }
 
 export interface LocationUpdate {

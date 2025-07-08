@@ -11,12 +11,12 @@ const getApiBaseUrl = () => {
   // Check if we're in development
   if (import.meta.env.DEV) {
     console.log('🔗 Using development fallback API URL');
-    return 'http://localhost:8000/api';
+    return 'http://localhost:5000/api';
   }
   
   // Production fallback - use your actual backend URL
   console.warn('⚠️ No API URL found in environment variables! Using production fallback.');
-  return 'https://polling-system-backend-3cp3.onrender.com/api';
+  return 'https://your-backend-domain.com/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -150,7 +150,7 @@ class ApiService {
     if (date) params.append('date', date);
     
     const query = params.toString();
-    return this.request(`/employees/${empId}/location-updates/${query ? `?${query}` : ''}`);
+    return this.request(`/location-updates/employee/${empId}${query ? `?${query}` : ''}`);
   }
 
   // Updated to use image URLs instead of file uploads
@@ -160,7 +160,7 @@ class ApiService {
     place_name: string;
     image_url?: string; // Changed from File to string URL
   }) {
-    return this.request('/employees/location-updates/create/', {
+    return this.request('/location-updates/create', {
       method: 'POST',
       body: JSON.stringify({
         latitude: data.latitude,
