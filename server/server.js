@@ -8,9 +8,8 @@ import connectDB from './config/database.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 // Import routes
-import authRoutes from './routes/auth.js';
-import employeeRoutes from './routes/employees.js';
-import locationUpdateRoutes from './routes/locationUpdates.js';
+import adminRoutes from './routes/admin.js';
+import bloRoutes from './routes/blo.js';
 
 // Load environment variables
 dotenv.config();
@@ -27,8 +26,8 @@ app.use(helmet({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
@@ -41,7 +40,6 @@ app.use(limiter);
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     const allowedOrigins = process.env.CORS_ORIGINS 
@@ -53,7 +51,6 @@ const corsOptions = {
           'http://127.0.0.1:5173'
         ];
     
-    // In development, allow all origins
     if (process.env.NODE_ENV === 'development') {
       return callback(null, true);
     }
@@ -86,7 +83,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'API is running',
+    message: 'BLO Monitoring API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0'
@@ -94,26 +91,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/location-updates', locationUpdateRoutes);
-
-// Additional route for location updates (to match frontend expectations)
-app.use('/api/employees/:empId/location-updates', (req, res, next) => {
-  req.url = `/employee/${req.params.empId}`;
-  locationUpdateRoutes(req, res, next);
-});
+app.use('/api/admin', adminRoutes);
+app.use('/api/blo', bloRoutes);
 
 // Root route
 app.get('/', (req, res) => {
   res.json({
-    message: 'Polling Station Management System API',
+    message: 'BLO Monitoring System API',
     version: '1.0.0',
     documentation: '/api/health',
     endpoints: {
-      auth: '/api/auth',
-      employees: '/api/employees',
-      locationUpdates: '/api/location-updates'
+      admin: '/api/admin',
+      blo: '/api/blo'
     }
   });
 });
@@ -125,13 +114,14 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 BLO Monitoring Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 API Health Check: http://localhost:${PORT}/api/health`);
   
   if (process.env.NODE_ENV === 'development') {
     console.log(`📖 API Documentation: http://localhost:${PORT}/`);
-    console.log(`🔐 Admin Login: username=admin, password=admin123`);
+    console.log(`🔐 Admin Login: userId=admin, password=admin123`);
+    console.log(`🧪 Test User Login: userId=test001, password=test123`);
   }
 });
 

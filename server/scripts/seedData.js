@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import User from '../models/User.js';
-import Employee from '../models/Employee.js';
-import LocationUpdate from '../models/LocationUpdate.js';
+import Admin from '../models/Admin.js';
+import BLO from '../models/BLO.js';
+import TestUser from '../models/TestUser.js';
+import LocationData from '../models/LocationData.js';
 import connectDB from '../config/database.js';
 
 dotenv.config();
@@ -14,209 +15,207 @@ const seedData = async () => {
     // Clear existing data
     console.log('🗑️  Clearing existing data...');
     await Promise.all([
-      User.deleteMany({}),
-      Employee.deleteMany({}),
-      LocationUpdate.deleteMany({})
+      Admin.deleteMany({}),
+      BLO.deleteMany({}),
+      TestUser.deleteMany({}),
+      LocationData.deleteMany({})
     ]);
 
-    // Create admin user
-    console.log('👤 Creating admin user...');
-    const adminUser = await User.create({
-      username: 'admin',
-      email: 'admin@example.com',
-      password: 'admin123',
-      firstName: 'System',
-      lastName: 'Administrator',
-      role: 'admin',
-      isStaff: true,
-      isSuperuser: true
-    });
-
-    // Create employee users
-    console.log('👥 Creating employee users...');
-    const employeeUsers = await User.create([
+    // Create admin users
+    console.log('👤 Creating admin users...');
+    const admins = await Admin.create([
       {
-        username: 'rajesh.kumar',
-        email: 'rajesh@example.com',
-        password: 'password123',
-        firstName: 'Rajesh',
-        lastName: 'Kumar',
-        mobileNumber: '9876543210',
-        role: 'employee'
+        name: 'System Administrator',
+        userId: 'admin',
+        password: 'admin123'
       },
       {
-        username: 'priya.sharma',
-        email: 'priya@example.com',
-        password: 'password123',
-        firstName: 'Priya',
-        lastName: 'Sharma',
-        mobileNumber: '9876543211',
-        role: 'employee'
-      },
-      {
-        username: 'mohammed.ali',
-        email: 'mohammed@example.com',
-        password: 'password123',
-        firstName: 'Mohammed',
-        lastName: 'Ali',
-        mobileNumber: '9876543212',
-        role: 'employee'
-      },
-      {
-        username: 'sunita.gupta',
-        email: 'sunita@example.com',
-        password: 'password123',
-        firstName: 'Sunita',
-        lastName: 'Gupta',
-        mobileNumber: '9876543213',
-        role: 'employee'
-      },
-      {
-        username: 'amit.patel',
-        email: 'amit@example.com',
-        password: 'password123',
-        firstName: 'Amit',
-        lastName: 'Patel',
-        mobileNumber: '9876543214',
-        role: 'employee'
+        name: 'John Doe',
+        userId: 'john.admin',
+        password: 'password123'
       }
     ]);
 
-    // Create employees
-    console.log('🏢 Creating employees...');
-    const employees = await Employee.create([
+    // Create test users (5 fake users for testing)
+    console.log('👥 Creating test users...');
+    const testUsers = await TestUser.create([
+      {
+        name: 'Test User 1',
+        designation: 'Block Level Officer',
+        officerType: 'BLO',
+        mobile: '9876543210',
+        boothNumber: 'TB001',
+        boothName: 'Test Booth 1 - Primary School',
+        userId: 'test001',
+        password: 'test123'
+      },
+      {
+        name: 'Test User 2',
+        designation: 'Assistant BLO',
+        officerType: 'ABLO',
+        mobile: '9876543211',
+        boothNumber: 'TB002',
+        boothName: 'Test Booth 2 - Community Center',
+        userId: 'test002',
+        password: 'test123'
+      },
+      {
+        name: 'Test User 3',
+        designation: 'Senior BLO',
+        officerType: 'SBLO',
+        mobile: '9876543212',
+        boothNumber: 'TB003',
+        boothName: 'Test Booth 3 - Government Office',
+        userId: 'test003',
+        password: 'test123'
+      },
+      {
+        name: 'Test User 4',
+        designation: 'Block Level Officer',
+        officerType: 'BLO',
+        mobile: '9876543213',
+        boothNumber: 'TB004',
+        boothName: 'Test Booth 4 - High School',
+        userId: 'test004',
+        password: 'test123'
+      },
+      {
+        name: 'Test User 5',
+        designation: 'Junior BLO',
+        officerType: 'JBLO',
+        mobile: '9876543214',
+        boothNumber: 'TB005',
+        boothName: 'Test Booth 5 - Municipal Hall',
+        userId: 'test005',
+        password: 'test123'
+      }
+    ]);
+
+    // Create some BLO users (for production use)
+    console.log('🏢 Creating BLO users...');
+    const blos = await BLO.create([
       {
         name: 'Rajesh Kumar',
-        designation: 'Polling Officer',
-        mobileNumber: '9876543210',
-        officeName: 'District Collector Office',
-        officePlace: 'Central Delhi',
-        boothNumber: 'B001',
+        designation: 'Block Level Officer',
+        officerType: 'BLO',
+        mobile: '9876543220',
+        boothNumber: 'BLO001',
         boothName: 'Primary School ABC',
-        buildingName: 'Government Primary School',
-        boothDuration: '7 AM - 7 PM',
-        wardNumber: 'W001',
-        wardName: 'Ward 1',
-        user: employeeUsers[0]._id
+        userId: 'rajesh.blo',
+        password: 'rajesh123'
       },
       {
         name: 'Priya Sharma',
-        designation: 'Assistant Polling Officer',
-        mobileNumber: '9876543211',
-        officeName: 'Municipal Corporation',
-        officePlace: 'South Delhi',
-        boothNumber: 'B002',
+        designation: 'Senior BLO',
+        officerType: 'SBLO',
+        mobile: '9876543221',
+        boothNumber: 'BLO002',
         boothName: 'Community Hall XYZ',
-        buildingName: 'Community Center',
-        boothDuration: '7 AM - 7 PM',
-        wardNumber: 'W002',
-        wardName: 'Ward 2',
-        user: employeeUsers[1]._id
+        userId: 'priya.blo',
+        password: 'priya123'
       },
       {
         name: 'Mohammed Ali',
-        designation: 'Security Officer',
-        mobileNumber: '9876543212',
-        officeName: 'Police Station',
-        officePlace: 'North Delhi',
-        boothNumber: 'B003',
-        boothName: 'High School DEF',
-        buildingName: 'Government High School',
-        boothDuration: '6 AM - 8 PM',
-        wardNumber: 'W001',
-        wardName: 'Ward 1',
-        user: employeeUsers[2]._id
-      },
-      {
-        name: 'Sunita Gupta',
-        designation: 'Polling Officer',
-        mobileNumber: '9876543213',
-        officeName: 'District Collector Office',
-        officePlace: 'West Delhi',
-        boothNumber: 'B004',
-        boothName: 'Library Building',
-        buildingName: 'Public Library',
-        boothDuration: '7 AM - 7 PM',
-        wardNumber: 'W003',
-        wardName: 'Ward 3',
-        user: employeeUsers[3]._id
-      },
-      {
-        name: 'Amit Patel',
-        designation: 'Technical Officer',
-        mobileNumber: '9876543214',
-        officeName: 'IT Department',
-        officePlace: 'East Delhi',
-        boothNumber: 'B005',
-        boothName: 'College Auditorium',
-        buildingName: 'Government College',
-        boothDuration: '6 AM - 8 PM',
-        wardNumber: 'W002',
-        wardName: 'Ward 2',
-        user: employeeUsers[4]._id
+        designation: 'Assistant BLO',
+        officerType: 'ABLO',
+        mobile: '9876543222',
+        boothNumber: 'BLO003',
+        boothName: 'Government High School',
+        userId: 'mohammed.blo',
+        password: 'mohammed123'
       }
     ]);
 
-    // Create additional employees without user accounts
-    console.log('👤 Creating additional employees...');
-    const additionalEmployees = [];
-    for (let i = 6; i <= 20; i++) {
-      const empData = {
-        name: `Employee ${i}`,
-        designation: ['Polling Officer', 'Assistant Polling Officer', 'Security Officer', 'Technical Officer'][i % 4],
-        mobileNumber: `987654${i.toString().padStart(4, '0')}`,
-        officeName: ['District Collector Office', 'Municipal Corporation', 'Police Station', 'IT Department'][i % 4],
-        officePlace: ['Central Delhi', 'South Delhi', 'North Delhi', 'East Delhi', 'West Delhi'][i % 5],
-        boothNumber: `B${i.toString().padStart(3, '0')}`,
-        boothName: `Booth ${i}`,
-        buildingName: `Building ${i}`,
-        boothDuration: '7 AM - 7 PM',
-        wardNumber: `W${(i % 5) + 1}`.padStart(4, '00'),
-        wardName: `Ward ${(i % 5) + 1}`
-      };
-      additionalEmployees.push(empData);
-    }
-    
-    await Employee.create(additionalEmployees);
+    // Create sample location data for today
+    console.log('📍 Creating sample location data...');
+    const today = new Date();
+    const locationData = [];
 
-    // Create sample location updates
-    console.log('📍 Creating sample location updates...');
-    const locationUpdates = [];
-    const baseDate = new Date();
-    baseDate.setHours(9, 0, 0, 0); // Start at 9 AM
-
-    for (let i = 0; i < employees.length; i++) {
-      const employee = employees[i];
+    // Create data for test users
+    for (let i = 0; i < testUsers.length; i++) {
+      const user = testUsers[i];
+      const imageCount = Math.floor(Math.random() * 5); // 0-4 images
       
-      // Create 3-5 location updates for each employee
-      const updateCount = 3 + Math.floor(Math.random() * 3);
-      
-      for (let j = 1; j <= updateCount; j++) {
-        const updateTime = new Date(baseDate);
-        updateTime.setMinutes(baseDate.getMinutes() + (j * 30)); // 30 minutes apart
+      // Create location-only entries
+      for (let j = 0; j < 2; j++) {
+        const time = new Date(today);
+        time.setHours(9 + j * 2, Math.floor(Math.random() * 60), 0, 0);
         
-        locationUpdates.push({
-          employee: employee._id,
-          serialNumber: j,
-          latitude: 28.6139 + (Math.random() - 0.5) * 0.02, // Random location around Delhi
+        locationData.push({
+          testUserId: user._id,
+          latitude: 28.6139 + (Math.random() - 0.5) * 0.02,
           longitude: 77.2090 + (Math.random() - 0.5) * 0.02,
-          placeName: `${employee.boothName}, ${employee.officePlace}`,
-          imageUrl: j % 2 === 0 ? 'https://images.pexels.com/photos/8923962/pexels-photo-8923962.jpeg?auto=compress&cs=tinysrgb&w=400' : '',
-          createdAt: updateTime
+          type: 'location_only',
+          userId: user.userId,
+          date: time
+        });
+      }
+      
+      // Create detailed analysis entries with images
+      for (let j = 0; j < imageCount; j++) {
+        const time = new Date(today);
+        time.setHours(10 + j * 2, Math.floor(Math.random() * 60), 0, 0);
+        
+        locationData.push({
+          testUserId: user._id,
+          latitude: 28.6139 + (Math.random() - 0.5) * 0.02,
+          longitude: 77.2090 + (Math.random() - 0.5) * 0.02,
+          imageUrl: `https://picsum.photos/400/300?random=${i * 10 + j}`,
+          type: 'detailed_analysis',
+          userId: user.userId,
+          date: time
         });
       }
     }
 
-    await LocationUpdate.create(locationUpdates);
+    // Create data for BLO users
+    for (let i = 0; i < blos.length; i++) {
+      const user = blos[i];
+      const imageCount = Math.floor(Math.random() * 5); // 0-4 images
+      
+      // Create location-only entries
+      for (let j = 0; j < 3; j++) {
+        const time = new Date(today);
+        time.setHours(8 + j * 3, Math.floor(Math.random() * 60), 0, 0);
+        
+        locationData.push({
+          bloId: user._id,
+          latitude: 28.6139 + (Math.random() - 0.5) * 0.02,
+          longitude: 77.2090 + (Math.random() - 0.5) * 0.02,
+          type: 'location_only',
+          userId: user.userId,
+          date: time
+        });
+      }
+      
+      // Create detailed analysis entries with images
+      for (let j = 0; j < imageCount; j++) {
+        const time = new Date(today);
+        time.setHours(11 + j * 2, Math.floor(Math.random() * 60), 0, 0);
+        
+        locationData.push({
+          bloId: user._id,
+          latitude: 28.6139 + (Math.random() - 0.5) * 0.02,
+          longitude: 77.2090 + (Math.random() - 0.5) * 0.02,
+          imageUrl: `https://picsum.photos/400/300?random=${(i + 10) * 10 + j}`,
+          type: 'detailed_analysis',
+          userId: user.userId,
+          date: time
+        });
+      }
+    }
+
+    await LocationData.create(locationData);
 
     console.log('✅ Sample data created successfully!');
-    console.log(`👤 Created ${employeeUsers.length + 1} users (including admin)`);
-    console.log(`🏢 Created ${employees.length + additionalEmployees.length} employees`);
-    console.log(`📍 Created ${locationUpdates.length} location updates`);
+    console.log(`👤 Created ${admins.length} admin users`);
+    console.log(`🧪 Created ${testUsers.length} test users`);
+    console.log(`🏢 Created ${blos.length} BLO users`);
+    console.log(`📍 Created ${locationData.length} location entries`);
     console.log('\n🔑 Login credentials:');
-    console.log('Admin: username=admin, password=admin123');
-    console.log('Employee: username=rajesh.kumar, password=password123');
-    console.log('Mobile Login: 9876543210 (Rajesh Kumar)');
+    console.log('Admin: userId=admin, password=admin123');
+    console.log('Test User: userId=test001, password=test123');
+    console.log('BLO User: userId=rajesh.blo, password=rajesh123');
 
   } catch (error) {
     console.error('❌ Error seeding data:', error);

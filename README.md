@@ -1,53 +1,72 @@
-# Polling Station Management System - MERN Stack
+# BLO Monitoring System - MERN Stack
 
-A comprehensive employee management system for polling stations built with the MERN stack (MongoDB, Express.js, React, Node.js).
+A comprehensive Block Level Officer (BLO) monitoring system built with the MERN stack (MongoDB, Express.js, React, Node.js).
 
 ## 🚀 Features
 
-- **User Authentication**: JWT-based authentication with role-based access control
-- **Employee Management**: Complete CRUD operations for employee records
-- **Location Tracking**: Real-time location updates with image uploads
-- **Mobile App**: Dedicated mobile interface for field employees
-- **Dashboard**: Administrative dashboard with statistics and search functionality
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
+### Admin Dashboard
+- **User Authentication**: Secure login with show/hide password functionality
+- **Dashboard Overview**: Real-time statistics and image upload distribution
+- **Know Your BLO**: Complete BLO directory with search and filtering
+- **Image Count Filtering**: Filter BLOs by daily image upload count (0-4)
+- **Detailed View**: Individual BLO details with location history
+- **Date-based Search**: Filter location updates by specific dates
+
+### BLO User Interface
+- **Secure Login**: User ID and password authentication
+- **Profile Management**: View personal and booth information
+- **Send Location**: Quick location sharing (lat/lon only)
+- **Detailed Analysis**: Location + image upload (max 4 images/day)
+- **Upload History**: View past location updates and images
+- **Real-time Tracking**: Daily image count monitoring
 
 ## 🛠️ Tech Stack
 
 ### Backend
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
-- **MongoDB** - Database
-- **Mongoose** - ODM for MongoDB
-- **JWT** - Authentication
-- **bcryptjs** - Password hashing
+- **MongoDB** - Database with Mongoose ODM
+- **JWT** - Authentication tokens
 - **Helmet** - Security middleware
-- **CORS** - Cross-origin resource sharing
+- **Express Validator** - Input validation
+- **Morgan** - HTTP request logging
 
 ### Frontend
-- **React** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Styling
-- **Vite** - Build tool
-- **Lucide React** - Icons
+- **React** - UI library with TypeScript
+- **Tailwind CSS** - Utility-first styling
+- **Vite** - Build tool and dev server
+- **Lucide React** - Icon library
 
-## 📋 Prerequisites
+## 📊 Database Collections
 
-Before running this application, make sure you have the following installed:
+### BLO Collection
+- Name, Designation, Officer Type
+- Mobile Number, Booth Number, Booth Name
+- User ID, Password (stored as plain text as requested)
+- Active status and timestamps
 
-- **Node.js** (v16 or higher)
-- **MongoDB** (v4.4 or higher)
-- **npm** or **yarn**
+### Admin Collection
+- Name, User ID, Password
+- Active status and last login tracking
+
+### TestUser Collection
+- Same structure as BLO (for testing purposes)
+- 5 fake users for development and testing
+
+### LocationData Collection
+- Latitude, Longitude coordinates
+- Image URL (optional)
+- Type: 'location_only' or 'detailed_analysis'
+- Date tracking and user references
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+### Prerequisites
+- Node.js (v16 or higher)
+- MongoDB (v4.4 or higher)
+- npm or yarn
 
-```bash
-git clone <repository-url>
-cd polling-system-mern
-```
-
-### 2. Backend Setup
+### Backend Setup
 
 ```bash
 # Navigate to server directory
@@ -56,9 +75,9 @@ cd server
 # Install dependencies
 npm install
 
-# Copy environment file and configure
+# Set up environment variables
 cp .env.example .env
-# Edit .env file with your MongoDB URI and JWT secret
+# Edit .env with your MongoDB URI
 
 # Seed the database with sample data
 npm run seed
@@ -69,10 +88,10 @@ npm run dev
 
 The backend server will start on `http://localhost:5000`
 
-### 3. Frontend Setup
+### Frontend Setup
 
 ```bash
-# Navigate to frontend directory (in a new terminal)
+# Navigate to frontend directory
 cd frontend
 
 # Install dependencies
@@ -84,171 +103,102 @@ npm run dev
 
 The frontend will start on `http://localhost:5173`
 
-## 🔧 Environment Configuration
+## 🔐 Login Credentials
 
-### Backend (.env)
+### Admin Access
+- **User ID**: `admin`
+- **Password**: `admin123`
 
-```env
-# Database
-MONGODB_URI=mongodb://localhost:27017/polling_system
+### Test BLO Users
+- **User ID**: `test001` | **Password**: `test123`
+- **User ID**: `test002` | **Password**: `test123`
+- **User ID**: `test003` | **Password**: `test123`
+- **User ID**: `test004` | **Password**: `test123`
+- **User ID**: `test005` | **Password**: `test123`
 
-# JWT Secret (use a strong, random string in production)
-JWT_SECRET=your-super-secret-jwt-key-here
-
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-
-# CORS Origins
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-### Frontend (.env)
-
-```env
-# API Base URL
-VITE_API_BASE_URL=http://localhost:5000/api
-
-# Image Upload Service (Optional)
-VITE_IMGBB_API_KEY=your-imgbb-api-key
-```
-
-## 📊 Database Schema
-
-### Users Collection
-```javascript
-{
-  username: String (unique),
-  email: String,
-  password: String (hashed),
-  firstName: String,
-  lastName: String,
-  mobileNumber: String,
-  role: String (admin/employee),
-  isActive: Boolean,
-  timestamps: true
-}
-```
-
-### Employees Collection
-```javascript
-{
-  empId: String (auto-generated, unique),
-  name: String,
-  designation: String,
-  mobileNumber: String,
-  officeName: String,
-  officePlace: String,
-  boothNumber: String,
-  boothName: String,
-  buildingName: String,
-  boothDuration: String,
-  wardNumber: String,
-  wardName: String,
-  user: ObjectId (ref: User),
-  timestamps: true
-}
-```
-
-### LocationUpdates Collection
-```javascript
-{
-  employee: ObjectId (ref: Employee),
-  serialNumber: Number,
-  latitude: Number,
-  longitude: Number,
-  placeName: String,
-  imageUrl: String,
-  timestamps: true
-}
-```
-
-## 🔐 Authentication
-
-The system uses JWT (JSON Web Tokens) for authentication:
-
-- **Admin Login**: Username/password authentication
-- **Mobile Login**: Mobile number-based authentication for employees
-- **Token Expiry**: 7 days
-- **Role-based Access**: Admin and Employee roles with different permissions
+### Production BLO Users
+- **User ID**: `rajesh.blo` | **Password**: `rajesh123`
+- **User ID**: `priya.blo` | **Password**: `priya123`
+- **User ID**: `mohammed.blo` | **Password**: `mohammed123`
 
 ## 📱 API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login with username/password
-- `POST /api/auth/mobile-login` - Login with mobile number
-- `POST /api/auth/logout` - Logout user
-- `GET /api/auth/profile` - Get user profile
+### Admin Routes (`/api/admin/`)
+- `POST /login` - Admin authentication
+- `GET /blos` - Get all BLOs with image counts
+- `GET /dashboard-stats` - Dashboard statistics
+- `GET /blo/:id/details` - Individual BLO details
 
-### Employees
-- `GET /api/employees` - Get all employees (with pagination)
-- `GET /api/employees/:empId` - Get employee by ID
-- `GET /api/employees/mobile/:mobile` - Get employee by mobile
-- `POST /api/employees` - Create new employee (Admin only)
-- `PUT /api/employees/:empId` - Update employee (Admin only)
-- `DELETE /api/employees/:empId` - Delete employee (Admin only)
-- `GET /api/employees/wards` - Get unique wards
-- `GET /api/employees/stats/dashboard` - Get dashboard stats
+### BLO Routes (`/api/blo/`)
+- `POST /login` - BLO authentication
+- `GET /profile` - User profile information
+- `POST /send-location` - Send location only
+- `POST /send-analysis` - Send location + image
+- `GET /history` - User's upload history
 
-### Location Updates
-- `GET /api/location-updates` - Get all location updates
-- `POST /api/location-updates/create` - Create location update
-- `GET /api/location-updates/employee/:empId` - Get updates by employee
-- `DELETE /api/location-updates/:id` - Delete location update (Admin only)
+## 🎯 Key Features Explained
 
-## 🔒 Security Features
+### Image Upload Limit
+- Each BLO can upload maximum 4 images per day
+- Admin dashboard shows real-time image count distribution
+- Color-coded indicators: Red (0-1), Yellow (2-3), Green (4)
 
-- **Helmet.js** - Security headers
-- **Rate Limiting** - Prevent abuse
-- **CORS** - Cross-origin protection
-- **Input Validation** - Express-validator
-- **Password Hashing** - bcryptjs
-- **JWT Authentication** - Secure token-based auth
+### Location Tracking
+- Two types: Location-only and Detailed Analysis
+- GPS coordinates automatically captured
+- Images uploaded to external service (placeholder in demo)
 
-## 📱 Mobile App Features
+### Admin Monitoring
+- Real-time dashboard with statistics
+- Search BLOs by name, user ID, or booth number
+- Filter by daily image upload count
+- Date-based filtering for historical data
 
-- **Mobile Login** - Quick access with mobile number
-- **Location Tracking** - GPS-based location updates
-- **Image Upload** - Capture and upload images with location
-- **Employee Profile** - View assignment details
-- **Duty Hours** - Time-based access control
+### Security Features
+- JWT-based authentication
+- Rate limiting and CORS protection
+- Input validation on all endpoints
+- Secure password handling (plain text as requested)
+
+## 🔧 Environment Configuration
+
+### Backend (.env)
+```env
+MONGODB_URI=mongodb://localhost:27017/blo_monitoring
+JWT_SECRET=your-super-secret-jwt-key
+PORT=5000
+NODE_ENV=development
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+```
+
+### Frontend (.env)
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
+## 📈 Sample Data
+
+The seed script creates:
+- 2 Admin users
+- 5 Test users (for testing)
+- 3 Production BLO users
+- Sample location data with images
+- Today's activity data for demonstration
 
 ## 🚀 Deployment
 
-### Backend Deployment (Render/Heroku)
-
+### Backend Deployment
 1. Set environment variables in your hosting platform
-2. Ensure MongoDB Atlas connection string is configured
+2. Ensure MongoDB connection string is configured
 3. Set `NODE_ENV=production`
 4. Deploy the `server` directory
 
-### Frontend Deployment (Vercel/Netlify)
-
+### Frontend Deployment
 1. Set `VITE_API_BASE_URL` to your backend URL
 2. Build the project: `npm run build`
 3. Deploy the `dist` directory
 
-## 🧪 Sample Data
-
-The system includes a seed script that creates:
-
-- **1 Admin User**: `username: admin, password: admin123`
-- **5 Employee Users**: Various employees with different roles
-- **20 Total Employees**: Mix of employees with and without user accounts
-- **Sample Location Updates**: Historical location data
-
-Run the seed script:
-```bash
-cd server
-npm run seed
-```
-
-## 🔧 Development Scripts
+## 🧪 Development Scripts
 
 ### Backend
 ```bash
@@ -264,28 +214,6 @@ npm run build    # Build for production
 npm run preview  # Preview production build
 ```
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Error**
-   - Ensure MongoDB is running locally
-   - Check connection string in `.env`
-   - For MongoDB Atlas, ensure IP whitelist is configured
-
-2. **CORS Errors**
-   - Verify `CORS_ORIGINS` in backend `.env`
-   - Check frontend API URL configuration
-
-3. **Authentication Issues**
-   - Ensure JWT_SECRET is set in backend
-   - Check token expiry and refresh logic
-
-4. **Port Conflicts**
-   - Backend default: 5000
-   - Frontend default: 5173
-   - Change ports in respective configurations if needed
-
 ## 📄 License
 
 This project is licensed under the MIT License.
@@ -300,4 +228,4 @@ This project is licensed under the MIT License.
 
 ## 📞 Support
 
-For support and questions, please create an issue in the repository or contact the development team.
+For support and questions, please create an issue in the repository.

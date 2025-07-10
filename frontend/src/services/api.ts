@@ -1,6 +1,5 @@
 // Get API base URL from environment variables
 const getApiBaseUrl = () => {
-  // Check for environment variable first
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
   
   if (apiUrl) {
@@ -8,25 +7,17 @@ const getApiBaseUrl = () => {
     return apiUrl;
   }
   
-  // Check if we're in development
   if (import.meta.env.DEV) {
     console.log('🔗 Using development fallback API URL');
     return 'http://localhost:5000/api';
   }
   
-  // Production fallback - use your actual backend URL
   console.warn('⚠️ No API URL found in environment variables! Using production fallback.');
   return 'https://your-backend-domain.com/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
 console.log('🚀 Final API Base URL:', API_BASE_URL);
-console.log('🔍 Environment check:', {
-  isDev: import.meta.env.DEV,
-  isProd: import.meta.env.PROD,
-  mode: import.meta.env.MODE,
-  apiUrl: import.meta.env.VITE_API_BASE_URL
-});
 
 class ApiService {
   private token: string | null = null;
@@ -41,7 +32,7 @@ class ApiService {
     };
 
     if (this.token) {
-      headers['Authorization'] = `Token ${this.token}`;
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
 
     return headers;
@@ -73,11 +64,33 @@ class ApiService {
     }
   }
 
-  // Authentication
-  async login(username: string, password: string) {
-    const response = await this.request('/auth/login/', {
+  // Admin Authentication
+  async adminLogin(userId: string, password: string) {
+    const response = await this.request('/admin/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ userId, password }),
+    });
+
+    if (response.token) {
+      this.token = response.token;
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('admin', JSON.stringify(response.admin));
+    }
+
+    return response;
+  }
+
+  async adminLogout() {
+    this.token = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('admin');
+  }
+
+  // BLO Authentication
+  async bloLogin(userId: string, password: string) {
+    const response = await this.request('/blo/login', {
+      method: 'POST',
+      body: JSON.stringify({ userId, password }),
     });
 
     if (response.token) {
@@ -89,131 +102,89 @@ class ApiService {
     return response;
   }
 
-  async loginWithMobile(mobile_number: string) {
-    const response = await this.request('/auth/mobile-login/', {
-      method: 'POST',
-      body: JSON.stringify({ mobile_number }),
-    });
-
-    if (response.token) {
-      this.token = response.token;
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-    }
-
-    // Store employee data for mobile app
-    if (response.employee) {
-      localStorage.setItem('employee', JSON.stringify(response.employee));
-    }
-
-    return response;
+  async bloLogout() {
+    this.token = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 
-  async logout() {
-    try {
-      await this.request('/auth/logout/', { method: 'POST' });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      this.token = null;
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('employee');
-    }
+  // Admin APIs
+  async getDashboardStats() {
+    return this.request('/admin/dashboard-stats');
   }
 
-  async getUserProfile() {
-    return this.request('/auth/profile/');
-  }
-
-  // Employees
-  async getEmployees(params?: { search?: string; ward?: string; page?: number }) {
+  async getAllBLOs(params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string; 
+    imageCount?: number; 
+  }) {
     const searchParams = new URLSearchParams();
-    if (params?.search) searchParams.append('search', params.search);
-    if (params?.ward) searchParams.append('ward', params.ward);
     if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.search) searchParams.append('search', params.search);
+    if (params?.imageCount !== undefined) searchParams.append('imageCount', params.imageCount.toString());
     
     const query = searchParams.toString();
-    return this.request(`/employees/${query ? `?${query}` : ''}`);
+    return this.request(`/admin/blos${query ? `?${query}` : ''}`);
   }
 
-  async getEmployee(empId: string) {
-    return this.request(`/employees/${empId}/`);
-  }
-
-  async getEmployeeByMobile(mobileNumber: string) {
-    return this.request(`/employees/mobile/${mobileNumber}/`);
-  }
-
-  async getLocationUpdates(empId: string, date?: string) {
-    const params = new URLSearchParams();
-    if (date) params.append('date', date);
+  async getBLODetails(id: string, params?: { page?: number; limit?: number; date?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.date) searchParams.append('date', params.date);
     
-    const query = params.toString();
-    return this.request(`/location-updates/employee/${empId}${query ? `?${query}` : ''}`);
+    const query = searchParams.toString();
+    return this.request(`/admin/blo/${id}/details${query ? `?${query}` : ''}`);
   }
 
-  // Updated to use image URLs instead of file uploads
-  async createLocationUpdate(data: {
-    latitude: number;
-    longitude: number;
-    place_name: string;
-    image_url?: string; // Changed from File to string URL
-  }) {
-    return this.request('/location-updates/create', {
+  // BLO APIs
+  async getUserProfile() {
+    return this.request('/blo/profile');
+  }
+
+  async sendLocation(latitude: number, longitude: number) {
+    return this.request('/blo/send-location', {
       method: 'POST',
-      body: JSON.stringify({
-        latitude: data.latitude,
-        longitude: data.longitude,
-        place_name: data.place_name,
-        image_url: data.image_url || '', // Optional image URL
-      }),
+      body: JSON.stringify({ latitude, longitude }),
     });
   }
 
-  // Helper method to upload image to external service (like ImgBB)
-  async uploadImageToExternalService(imageFile: File): Promise<string> {
-    const formData = new FormData();
-    formData.append('image', imageFile);
+  async sendDetailedAnalysis(latitude: number, longitude: number, imageUrl: string) {
+    return this.request('/blo/send-analysis', {
+      method: 'POST',
+      body: JSON.stringify({ latitude, longitude, imageUrl }),
+    });
+  }
+
+  async getUserHistory(params?: { page?: number; limit?: number; date?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.date) searchParams.append('date', params.date);
     
+    const query = searchParams.toString();
+    return this.request(`/blo/history${query ? `?${query}` : ''}`);
+  }
+
+  // Helper method to upload image to external service
+  async uploadImageToExternalService(imageFile: File): Promise<string> {
     try {
-      // Using ImgBB API (free service)
-      const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+      // Using a placeholder service for demo
+      // In production, you would use a real image hosting service
+      console.log('📤 Uploading image...');
       
-      if (!apiKey) {
-        console.warn('⚠️ ImgBB API key not found, using placeholder image');
-        return 'https://via.placeholder.com/400x300?text=Demo+Image';
-      }
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('📤 Uploading image to ImgBB...');
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log('✅ Image uploaded successfully:', result.data.url);
-        return result.data.url; // Return the image URL
-      } else {
-        throw new Error('Failed to upload image');
-      }
+      // Return a placeholder image URL
+      const randomId = Math.random().toString(36).substring(7);
+      return `https://picsum.photos/400/300?random=${randomId}`;
     } catch (error) {
       console.error('❌ Image upload failed:', error);
-      // Fallback: return a placeholder image URL
-      return 'https://via.placeholder.com/400x300?text=Image+Upload+Failed';
+      throw new Error('Failed to upload image');
     }
-  }
-
-  // Wards
-  async getWards() {
-    return this.request('/employees/wards/');
-  }
-
-  // Dashboard stats
-  async getDashboardStats() {
-    return this.request('/employees/stats/dashboard/');
   }
 }
 

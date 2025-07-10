@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { LogIn, User, Lock, AlertCircle } from 'lucide-react';
+import { LogIn, User, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
-interface LoginFormProps {
-  onLogin: (username: string, password: string) => Promise<boolean>;
+interface AdminLoginProps {
+  onLogin: (userId: string, password: string) => Promise<boolean>;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,9 +18,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const success = onLogin(username, password);
+      const success = await onLogin(userId, password);
       if (!success) {
-        setError('Invalid username or password');
+        setError('Invalid user ID or password');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -36,32 +37,32 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
             <LogIn className="h-8 w-8 text-white" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Polling Station Dashboard
+            Admin Dashboard
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to access the management system
+            BLO Monitoring System
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="sr-only">
-                Username
+              <label htmlFor="userId" className="sr-only">
+                User ID
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="username"
-                  name="username"
+                  id="userId"
+                  name="userId"
                   type="text"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Username"
+                  placeholder="User ID"
                 />
               </div>
             </div>
@@ -77,13 +78,24 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
@@ -104,9 +116,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               ) : (
-                'Sign in'
+                'Sign in as Admin'
               )}
             </button>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Demo credentials: <span className="font-mono">admin / admin123</span>
+            </p>
           </div>
         </form>
       </div>
@@ -114,4 +132,4 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   );
 };
 
-export default LoginForm;
+export default AdminLogin;

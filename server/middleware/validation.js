@@ -12,57 +12,12 @@ export const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// User validation rules
-export const validateUserRegistration = [
-  body('username')
-    .trim()
-    .isLength({ min: 3, max: 150 })
-    .withMessage('Username must be between 3 and 150 characters')
-    .matches(/^[a-zA-Z0-9_.-]+$/)
-    .withMessage('Username can only contain letters, numbers, dots, hyphens, and underscores'),
-  
-  body('email')
-    .optional()
-    .trim()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Please provide a valid email address'),
-  
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long'),
-  
-  body('firstName')
-    .optional()
-    .trim()
-    .isLength({ max: 150 })
-    .withMessage('First name cannot exceed 150 characters'),
-  
-  body('lastName')
-    .optional()
-    .trim()
-    .isLength({ max: 150 })
-    .withMessage('Last name cannot exceed 150 characters'),
-  
-  body('mobileNumber')
-    .optional()
-    .trim()
-    .matches(/^\d{10}$/)
-    .withMessage('Mobile number must be exactly 10 digits'),
-  
-  body('role')
-    .optional()
-    .isIn(['admin', 'employee'])
-    .withMessage('Role must be either admin or employee'),
-  
-  handleValidationErrors
-];
-
-export const validateUserLogin = [
-  body('username')
+// Admin validation rules
+export const validateAdminLogin = [
+  body('userId')
     .trim()
     .notEmpty()
-    .withMessage('Username is required'),
+    .withMessage('User ID is required'),
   
   body('password')
     .notEmpty()
@@ -71,88 +26,22 @@ export const validateUserLogin = [
   handleValidationErrors
 ];
 
-export const validateMobileLogin = [
-  body('mobile_number')
+// BLO validation rules
+export const validateBLOLogin = [
+  body('userId')
     .trim()
-    .matches(/^\d{10}$/)
-    .withMessage('Mobile number must be exactly 10 digits'),
+    .notEmpty()
+    .withMessage('User ID is required'),
+  
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
   
   handleValidationErrors
 ];
 
-// Employee validation rules
-export const validateEmployee = [
-  body('name')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Name cannot exceed 100 characters'),
-  
-  body('designation')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Designation cannot exceed 100 characters'),
-  
-  body('mobileNumber')
-    .optional()
-    .trim()
-    .matches(/^\d{10}$/)
-    .withMessage('Mobile number must be exactly 10 digits'),
-  
-  body('officeName')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Office name cannot exceed 100 characters'),
-  
-  body('officePlace')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Office place cannot exceed 100 characters'),
-  
-  body('boothNumber')
-    .optional()
-    .trim()
-    .isLength({ max: 20 })
-    .withMessage('Booth number cannot exceed 20 characters'),
-  
-  body('boothName')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Booth name cannot exceed 100 characters'),
-  
-  body('buildingName')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Building name cannot exceed 100 characters'),
-  
-  body('boothDuration')
-    .optional()
-    .trim()
-    .isLength({ max: 50 })
-    .withMessage('Booth duration cannot exceed 50 characters'),
-  
-  body('wardNumber')
-    .optional()
-    .trim()
-    .isLength({ max: 10 })
-    .withMessage('Ward number cannot exceed 10 characters'),
-  
-  body('wardName')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Ward name cannot exceed 100 characters'),
-  
-  handleValidationErrors
-];
-
-// Location update validation rules
-export const validateLocationUpdate = [
+// Location data validation
+export const validateLocationOnly = [
   body('latitude')
     .isFloat({ min: -90, max: 90 })
     .withMessage('Latitude must be between -90 and 90'),
@@ -161,37 +50,26 @@ export const validateLocationUpdate = [
     .isFloat({ min: -180, max: 180 })
     .withMessage('Longitude must be between -180 and 180'),
   
-  body('place_name')
+  handleValidationErrors
+];
+
+export const validateDetailedAnalysis = [
+  body('latitude')
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be between -90 and 90'),
+  
+  body('longitude')
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be between -180 and 180'),
+  
+  body('imageUrl')
     .trim()
     .notEmpty()
-    .withMessage('Place name is required')
-    .isLength({ max: 200 })
-    .withMessage('Place name cannot exceed 200 characters'),
-  
-  body('image_url')
-    .optional()
-    .trim()
+    .withMessage('Image URL is required')
     .isURL({ protocols: ['http', 'https'] })
     .withMessage('Image URL must be a valid HTTP/HTTPS URL')
     .isLength({ max: 500 })
     .withMessage('Image URL cannot exceed 500 characters'),
-  
-  handleValidationErrors
-];
-
-// Parameter validation
-export const validateEmpId = [
-  param('empId')
-    .matches(/^EMP\d{3}$/)
-    .withMessage('Employee ID must be in format EMP001, EMP002, etc.'),
-  
-  handleValidationErrors
-];
-
-export const validateMobileNumber = [
-  param('mobileNumber')
-    .matches(/^\d{10}$/)
-    .withMessage('Mobile number must be exactly 10 digits'),
   
   handleValidationErrors
 ];
@@ -214,11 +92,10 @@ export const validatePagination = [
     .isLength({ max: 100 })
     .withMessage('Search term cannot exceed 100 characters'),
   
-  query('ward')
+  query('imageCount')
     .optional()
-    .trim()
-    .isLength({ max: 10 })
-    .withMessage('Ward number cannot exceed 10 characters'),
+    .isInt({ min: 0, max: 4 })
+    .withMessage('Image count must be between 0 and 4'),
   
   query('date')
     .optional()

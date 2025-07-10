@@ -1,54 +1,62 @@
 import React, { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
-import LoginForm from './components/LoginForm';
-import Dashboard from './components/Dashboard';
-import DetailsPage from './components/DetailsPage';
-import MobileApp from './components/MobileApp';
+import AdminLogin from './components/AdminLogin';
+import BLOLogin from './components/BLOLogin';
+import AdminDashboard from './components/AdminDashboard';
+import BLODashboard from './components/BLODashboard';
+import BLODetailsPage from './components/BLODetailsPage';
 
-type ViewType = 'login' | 'dashboard' | 'details' | 'mobile';
+type ViewType = 'admin-login' | 'blo-login' | 'admin-dashboard' | 'blo-dashboard' | 'blo-details';
 
 function App() {
-  const { user, login, logout, loginWithMobile, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<ViewType>('login');
-  const [selectedEmpId, setSelectedEmpId] = useState<string>('');
+  const { admin, user, loading, adminLogin, bloLogin, logout } = useAuth();
+  const [currentView, setCurrentView] = useState<ViewType>('admin-login');
+  const [selectedBLOId, setSelectedBLOId] = useState<string>('');
 
-  // Check URL for mobile app access
   React.useEffect(() => {
-    const path = window.location.pathname;
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    if (path === '/mobile' || urlParams.get('mobile') === 'true') {
-      setCurrentView('mobile');
+    if (admin) {
+      setCurrentView('admin-dashboard');
     } else if (user) {
-      setCurrentView('dashboard');
+      setCurrentView('blo-dashboard');
     }
-  }, [user]);
+  }, [admin, user]);
 
-  const handleLogin = async (username: string, password: string): Promise<boolean> => {
-    const success = await login(username, password);
+  const handleAdminLogin = async (userId: string, password: string): Promise<boolean> => {
+    const success = await adminLogin(userId, password);
     if (success) {
-      setCurrentView('dashboard');
+      setCurrentView('admin-dashboard');
+    }
+    return success;
+  };
+
+  const handleBLOLogin = async (userId: string, password: string): Promise<boolean> => {
+    const success = await bloLogin(userId, password);
+    if (success) {
+      setCurrentView('blo-dashboard');
     }
     return success;
   };
 
   const handleLogout = () => {
     logout();
-    setCurrentView('login');
+    setCurrentView('admin-login');
   };
 
-  const handleViewDetails = (empId: string) => {
-    setSelectedEmpId(empId);
-    setCurrentView('details');
+  const handleViewBLODetails = (bloId: string) => {
+    setSelectedBLOId(bloId);
+    setCurrentView('blo-details');
   };
 
-  const handleBackToDashboard = () => {
-    setCurrentView('dashboard');
+  const handleBackToAdminDashboard = () => {
+    setCurrentView('admin-dashboard');
   };
 
-  const handleMobileLogin = async (mobileNumber: string): Promise<boolean> => {
-    const success = await loginWithMobile(mobileNumber);
-    return success;
+  const handleSwitchToBLOLogin = () => {
+    setCurrentView('blo-login');
+  };
+
+  const handleBackToAdminLogin = () => {
+    setCurrentView('admin-login');
   };
 
   if (loading) {
@@ -57,48 +65,64 @@ function App() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading application...</p>
-          <p className="text-sm text-gray-500">API: {import.meta.env.VITE_API_BASE_URL || 'Using fallback'}</p>
         </div>
       </div>
     );
   }
 
-  // Mobile app view
-  if (currentView === 'mobile') {
+  // Show appropriate view based on authentication state and current view
+  if (admin && currentView === 'admin-dashboard') {
     return (
-      <MobileApp
-        onLoginWithMobile={handleMobileLogin}
-        user={user}
+      <AdminDashboard
+        admin={admin}
+        onLogout={handleLogout}
+        onViewBLODetails={handleViewBLODetails}
       />
     );
   }
 
-  // Main dashboard views
-  if (!user) {
+  if (admin && currentView === 'blo-details') {
     return (
-      <LoginForm onLogin={handleLogin} />
+      <BLODetailsPage
+        bloId={selectedBLOId}
+        onBack={handleBackToAdminDashboard}
+      />
     );
   }
 
-  switch (currentView) {
-    case 'dashboard':
-      return (
-        <Dashboard
-          user={user}
-          onLogout={handleLogout}
-          onViewDetails={handleViewDetails}
-        />
-      );
-    case 'details':
-      return (
-        <DetailsPage
-          empId={selectedEmpId}
-          onBack={handleBackToDashboard}
-        />
-      );
-    default:
-      return <LoginForm onLogin={handleLogin} />;
+  if (user && currentView === 'blo-dashboard') {
+    return (
+      <BLODashboard
+        user={user}
+        onLogout={handleLogout}
+      />
+    );
   }
+
+  // Login views
+  if (currentView === 'blo-login') {
+    return (
+      <BLOLogin
+        onLogin={handleBLOLogin}
+        onBackToAdmin={handleBackToAdminLogin}
+      />
+    );
+  }
+
+  // Default to admin login
+  return (
+    <div className="relative">
+      <AdminLogin onLogin={handleAdminLogin} />
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+        <button
+          onClick={handleSwitchToBLOLogin}
+          className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200 underline"
+        >
+          Login as BLO instead
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default App;

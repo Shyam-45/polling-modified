@@ -1,41 +1,86 @@
-export interface Employee {
-  id?: number;
-  emp_id: string;
+export interface Admin {
+  id: string;
   name: string;
-  designation: string;
-  mobile_number: string;
-  office_name: string;
-  office_place: string;
-  booth_number: string;
-  booth_name: string;
-  booth_duration: string;
-  building_name: string;
-  ward_number: string;
-  ward_name?: string;
-  // Add computed properties from backend
-  employee_details?: string;
-  contact_details?: string;
-  office_details?: string;
-  booth_details?: string;
-  assignment_summary?: string;
+  userId: string;
 }
 
-export interface LocationUpdate {
-  id: string;
-  emp_id: string;
-  serial_number: number;
+export interface BLO {
+  _id: string;
+  name: string;
+  designation: string;
+  officerType: string;
+  mobile: string;
+  boothNumber: string;
+  boothName: string;
+  userId: string;
+  password: string;
+  isActive: boolean;
+  todayImageCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestUser {
+  _id: string;
+  name: string;
+  designation: string;
+  officerType: string;
+  mobile: string;
+  boothNumber: string;
+  boothName: string;
+  userId: string;
+  password: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LocationData {
+  _id: string;
+  bloId?: string;
+  testUserId?: string;
+  latitude: number;
+  longitude: number;
+  imageUrl?: string;
+  type: 'location_only' | 'detailed_analysis';
+  date: string;
+  userId: string;
   location: string;
-  place_name: string;
-  timestamp: string;
-  image?: string;
+  formattedDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DashboardStats {
+  totalBLOs: number;
+  totalTestUsers: number;
+  todayLocationUpdates: number;
+  todayImageUploads: number;
+  imageDistribution: {
+    0: number;
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+  };
 }
 
 export interface User {
-  id?: number;
-  username: string;
-  role: 'admin' | 'employee';
-  email?: string;
-  mobile_number?: string;
-  first_name?: string;
-  last_name?: string;
+  id: string;
+  name: string;
+  userId: string;
+  designation: string;
+  officerType: string;
+  mobile: string;
+  boothNumber: string;
+  boothName: string;
+  userType: 'blo' | 'testUser';
+  todayImageCount?: number;
+}
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
 }

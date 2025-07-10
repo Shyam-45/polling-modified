@@ -1,58 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, MapPin, Camera, Clock, Filter, User, Building, Phone } from 'lucide-react';
-import { LocationUpdate, Employee } from '../types';
+import { ArrowLeft, Calendar, MapPin, Camera, Clock, Filter, User, Building, Phone, Image as ImageIcon } from 'lucide-react';
+import { BLO, LocationData } from '../types';
 import { apiService } from '../services/api';
 
-interface DetailsPageProps {
-  empId: string;
+interface BLODetailsPageProps {
+  bloId: string;
   onBack: () => void;
 }
 
-const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
+const BLODetailsPage: React.FC<BLODetailsPageProps> = ({ bloId, onBack }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [locationUpdates, setLocationUpdates] = useState<LocationUpdate[]>([]);
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [locationData, setLocationData] = useState<LocationData[]>([]);
+  const [blo, setBlo] = useState<BLO | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadEmployeeAndUpdates();
-  }, [empId]);
+    loadBLOAndData();
+  }, [bloId]);
 
-  const loadEmployeeAndUpdates = async () => {
+  useEffect(() => {
+    if (blo) {
+      loadLocationData(currentPage, selectedDate);
+    }
+  }, [currentPage, selectedDate]);
+
+  const loadBLOAndData = async () => {
     try {
       setLoading(true);
       setError('');
       
-      // Load employee details and today's location updates
-      const [employeeData, updatesData] = await Promise.all([
-        apiService.getEmployee(empId),
-        apiService.getLocationUpdates(empId, selectedDate)
-      ]);
+      const data = await apiService.getBLODetails(bloId, { 
+        page: 1, 
+        limit: 20,
+        date: selectedDate 
+      });
       
-      setEmployee(employeeData);
-      setLocationUpdates(updatesData.results || updatesData);
+      setBlo(data.blo);
+      setLocationData(data.locationData || []);
+      setTotalPages(data.pagination?.pages || 1);
     } catch (error) {
-      console.error('Failed to load data:', error);
-      setError('Failed to load employee details and location updates. Please try again.');
+      console.error('Failed to load BLO details:', error);
+      setError('Failed to load BLO details. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadLocationUpdates = async (date?: string) => {
+  const loadLocationData = async (page: number, date?: string) => {
     try {
       setError('');
-      const data = await apiService.getLocationUpdates(empId, date || selectedDate);
-      setLocationUpdates(data.results || data);
+      const data = await apiService.getBLODetails(bloId, { 
+        page, 
+        limit: 20,
+        date 
+      });
+      
+      setLocationData(data.locationData || []);
+      setTotalPages(data.pagination?.pages || 1);
     } catch (error) {
-      console.error('Failed to load location updates:', error);
-      setError('Failed to load location updates. Please try again.');
+      console.error('Failed to load location data:', error);
+      setError('Failed to load location data. Please try again.');
     }
   };
 
   const handleDateFilter = () => {
-    loadLocationUpdates(selectedDate);
+    setCurrentPage(1);
+    loadLocationData(1, selectedDate);
   };
 
   const formatTime = (timestamp: string) => {
@@ -73,19 +89,19 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading employee details...</p>
+          <p className="mt-4 text-gray-600">Loading BLO details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center py-4">
             <button
@@ -95,9 +111,9 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">Employee Details & Location Updates</h1>
+              <h1 className="text-2xl font-bold text-gray-900">BLO Details & Location History</h1>
               <p className="text-sm text-gray-600">
-                {employee ? `${employee.name} (${employee.emp_id})` : `Employee ID: ${empId}`}
+                {blo ? `${blo.name} (${blo.userId})` : `BLO ID: ${bloId}`}
               </p>
             </div>
           </div>
@@ -113,20 +129,21 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
           </div>
         )}
 
-        {/* Employee Summary Card */}
-        {employee && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Employee Summary</h3>
+        {/* BLO Summary Card */}
+        {blo && (
+          <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-lg p-8 mb-8 border border-white/20">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">BLO Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="flex items-start">
                 <User className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Personal Info</p>
-                  <p className="text-sm text-gray-900">{employee.name || 'Not assigned'}</p>
-                  <p className="text-sm text-gray-600">{employee.designation || 'Not assigned'}</p>
-                  <p className="text-sm text-gray-600 flex items-center">
+                  <p className="text-sm text-gray-900 font-semibold">{blo.name}</p>
+                  <p className="text-sm text-gray-600">{blo.designation}</p>
+                  <p className="text-sm text-gray-600">{blo.officerType}</p>
+                  <p className="text-sm text-gray-600 flex items-center mt-1">
                     <Phone className="h-3 w-3 mr-1" />
-                    {employee.mobile_number || 'Not assigned'}
+                    {blo.mobile}
                   </p>
                 </div>
               </div>
@@ -134,9 +151,12 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
               <div className="flex items-start">
                 <Building className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Office Assignment</p>
-                  <p className="text-sm text-gray-900">{employee.office_name || 'Not assigned'}</p>
-                  <p className="text-sm text-gray-600">{employee.office_place || 'Not assigned'}</p>
+                  <p className="text-sm font-medium text-gray-700">User Details</p>
+                  <p className="text-sm text-gray-900 font-mono">{blo.userId}</p>
+                  <p className="text-sm text-gray-600">Password: {blo.password}</p>
+                  <p className="text-sm text-gray-600">
+                    Status: {blo.isActive ? 'Active' : 'Inactive'}
+                  </p>
                 </div>
               </div>
               
@@ -144,17 +164,21 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
                 <MapPin className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-700">Booth Assignment</p>
-                  <p className="text-sm text-gray-900">{employee.booth_number || 'Not assigned'} - {employee.booth_name || 'Not assigned'}</p>
-                  <p className="text-sm text-gray-600">{employee.building_name || 'Not assigned'}</p>
+                  <p className="text-sm text-gray-900 font-semibold">{blo.boothNumber}</p>
+                  <p className="text-sm text-gray-600">{blo.boothName}</p>
                 </div>
               </div>
               
               <div className="flex items-start">
-                <Clock className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
+                <Camera className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Schedule & Ward</p>
-                  <p className="text-sm text-gray-900">{employee.booth_duration || 'Not assigned'}</p>
-                  <p className="text-sm text-gray-600">Ward: {employee.ward_number || 'Not assigned'}</p>
+                  <p className="text-sm font-medium text-gray-700">Today's Activity</p>
+                  <p className="text-sm text-gray-900 font-semibold">
+                    {blo.todayImageCount || 0}/4 images
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Created: {formatDate(blo.createdAt)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -162,11 +186,11 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
         )}
 
         {/* Date Filter */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
+        <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-lg p-6 mb-8 border border-white/20">
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1">
               <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-                Select Date for Location Updates
+                Select Date for Location Data
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -192,65 +216,76 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
           </div>
         </div>
 
-        {/* Location Updates Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Location Updates</h3>
+        {/* Location Data Table */}
+        <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+          <div className="px-6 py-4 bg-gradient-to-r from-gray-50/80 to-blue-50/80 border-b border-gray-200/50">
+            <h3 className="text-lg font-bold text-gray-900">Location Updates</h3>
             <p className="text-sm text-gray-600 mt-1">
-              Showing {locationUpdates.length} updates for {formatDate(selectedDate + 'T00:00:00')}
+              Showing {locationData.length} updates for {formatDate(selectedDate + 'T00:00:00')}
             </p>
           </div>
           
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200/50">
+              <thead className="bg-gradient-to-r from-gray-50/80 to-blue-50/80">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Serial No.
-                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location Update
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Location
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Image
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {locationUpdates.length > 0 ? (
-                  locationUpdates.map((update) => (
-                    <tr key={update.id} className="hover:bg-gray-50 transition-colors duration-200">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                          {update.serial_number}
-                        </span>
-                      </td>
+              <tbody className="bg-white/50 divide-y divide-gray-200/30">
+                {locationData.length > 0 ? (
+                  locationData.map((update) => (
+                    <tr key={update._id} className="hover:bg-blue-50/50 transition-colors duration-200">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 text-gray-400 mr-2" />
                           <div>
-                            <p className="font-medium">{formatTime(update.timestamp)}</p>
-                            <p className="text-xs text-gray-500">{formatDate(update.timestamp)}</p>
+                            <p className="font-medium">{formatTime(update.date)}</p>
+                            <p className="text-xs text-gray-500">{formatDate(update.date)}</p>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          update.type === 'detailed_analysis'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {update.type === 'detailed_analysis' ? (
+                            <Camera className="h-3 w-3 mr-1" />
+                          ) : (
+                            <MapPin className="h-3 w-3 mr-1" />
+                          )}
+                          {update.type === 'detailed_analysis' ? 'Analysis' : 'Location'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="flex items-start">
                           <MapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
                           <div>
-                            <p className="font-medium">{update.place_name}</p>
-                            <p className="text-gray-500 text-xs">{update.location}</p>
+                            <p className="font-medium">{update.location}</p>
+                            <p className="text-gray-500 text-xs">
+                              Lat: {update.latitude.toFixed(6)}, Lng: {update.longitude.toFixed(6)}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {update.image ? (
+                        {update.imageUrl ? (
                           <div className="flex items-center">
                             <img
-                              src={update.image}
+                              src={update.imageUrl}
                               alt="Location update"
                               className="h-16 w-16 rounded-lg object-cover mr-3 border border-gray-200"
                               onError={(e) => {
@@ -268,7 +303,7 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
                         ) : (
                           <div className="flex items-center text-gray-500">
                             <div className="h-16 w-16 rounded-lg bg-gray-100 flex items-center justify-center mr-3 border border-gray-200">
-                              <Camera className="h-6 w-6 text-gray-400" />
+                              <ImageIcon className="h-6 w-6 text-gray-400" />
                             </div>
                             <div>
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
@@ -294,10 +329,40 @@ const DetailsPage: React.FC<DetailsPageProps> = ({ empId, onBack }) => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50/80 to-blue-50/80 border-t border-gray-200/50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-2 text-sm font-medium text-gray-700">
+                    {currentPage}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
   );
 };
 
-export default DetailsPage;
+export default BLODetailsPage;

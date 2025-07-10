@@ -1,63 +1,68 @@
 import { useState, useEffect } from 'react';
-import { User } from '../types';
+import { Admin, User } from '../types';
 import { apiService } from '../services/api';
 
 export const useAuth = () => {
+  const [admin, setAdmin] = useState<Admin | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const storedAdmin = localStorage.getItem('admin');
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     
-    if (storedUser && token) {
+    if (storedAdmin && token) {
+      setAdmin(JSON.parse(storedAdmin));
+    } else if (storedUser && token) {
       setUser(JSON.parse(storedUser));
     }
+    
     setLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const adminLogin = async (userId: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiService.login(username, password);
+      const response = await apiService.adminLogin(userId, password);
+      setAdmin(response.admin);
+      return true;
+    } catch (error) {
+      console.error('Admin login failed:', error);
+      return false;
+    }
+  };
+
+  const bloLogin = async (userId: string, password: string): Promise<boolean> => {
+    try {
+      const response = await apiService.bloLogin(userId, password);
       setUser(response.user);
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('BLO login failed:', error);
       return false;
     }
   };
 
   const logout = async () => {
     try {
-      await apiService.logout();
+      if (admin) {
+        await apiService.adminLogout();
+        setAdmin(null);
+      } else if (user) {
+        await apiService.bloLogout();
+        setUser(null);
+      }
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      setUser(null);
     }
   };
 
-  const loginWithMobile = async (mobileNumber: string): Promise<boolean> => {
-    try {
-      const response = await apiService.loginWithMobile(mobileNumber);
-      
-      // If we have a user account, set it
-      if (response.user) {
-        setUser(response.user);
-      } else if (response.employee) {
-        // Create a temporary user object for mobile app access
-        setUser({
-          username: response.employee.mobile_number,
-          role: 'employee'
-        });
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Mobile login failed:', error);
-      return false;
-    }
+  return { 
+    admin, 
+    user, 
+    loading, 
+    adminLogin, 
+    bloLogin, 
+    logout 
   };
-
-  return { user, login, logout, loginWithMobile, loading };
 };

@@ -1,7 +1,7 @@
 {
-  "name": "polling-system-backend",
+  "name": "blo-monitoring-backend",
   "version": "1.0.0",
-  "description": "Polling Station Management System Backend - MERN Stack",
+  "description": "BLO Monitoring System Backend - MERN Stack",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -14,7 +14,6 @@
     "mongoose": "^8.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "helmet": "^7.1.0",
@@ -26,8 +25,8 @@
     "nodemon": "^3.0.2"
   },
   "keywords": [
-    "polling",
-    "management",
+    "blo",
+    "monitoring",
     "mern",
     "mongodb",
     "express",
